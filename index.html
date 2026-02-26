@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <style>html, body, #map { height: 100%; margin: 0; }</style>
+</head>
+<body>
+<div id="map"></div>
+<script>
+  const tunis = [36.8065, 10.1815];
+  const map = L.map('map').setView(tunis, 13);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
+
+  let marker = L.marker(tunis, { draggable: true }).addTo(map);
+
+  function send(lat, lng){
+    // put coords in URL so FlutterFlow can read them later
+    const newUrl = `${location.pathname}?lat=${lat}&lng=${lng}`;
+    history.replaceState({}, '', newUrl);
+  }
+
+  map.on('click', (e) => {
+    marker.setLatLng(e.latlng);
+    send(e.latlng.lat, e.latlng.lng);
+  });
+
+  marker.on('dragend', () => {
+    const p = marker.getLatLng();
+    send(p.lat, p.lng);
+  });
+</script>
+</body>
+</html>
