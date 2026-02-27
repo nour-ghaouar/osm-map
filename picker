@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <style>
+    html, body, #map { height: 100%; margin: 0; }
+    #hint {
+      position:absolute; top:10px; left:10px; right:10px;
+      background:#111; color:#fff; padding:10px; border-radius:10px;
+      font-family:Arial; font-size:14px; opacity:.9;
+    }
+  </style>
+</head>
+<body>
+<div id="map"></div>
+<div id="hint">Clique sur la carte pour choisir l’adresse (auto).</div>
+
+<script>
+  const params = new URLSearchParams(location.search);
+  const returnUrl = params.get('return'); // required
+  if (!returnUrl) {
+    document.getElementById('hint').innerText = "Paramètre return manquant.";
+  }
+
+  const map = L.map('map').setView([36.8065, 10.1815], 13);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
+
+  let marker = null;
+
+  async function reverseGeocode(lat, lng) {
+    const url = `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}`;
+    const res = await fetch(url, { headers: { 'Accept': 'application/json' }});
+    if (!res.ok) throw new Error('Reverse geocoding failed');
+    const data = await res.json();
+    return data.display_name || `${lat}, ${lng}`;
+  }
+
+  map.on('click', async (e) => {
+    const lat = e.latlng.lat;
+    const lng = e.latlng.lng;
+
+    if (marker) marker.setLatLng(e.latlng);
+    else marker = L.marker(e.latlng).addTo(map);
+
+    document.getElementById('hint').innerText = "Récupération de l’adresse…";
+
+    try {
+      const addr = await reverseGeocode(lat, lng);
+      const u = new URL(returnUrl);
+      u.searchParams.set('lat', lat.toFixed(6));
+      u.searchParams.set('lng', lng.toFixed(6));
+      u.searchParams.set('addr', addr);
+      location.href = u.toString();
+    } catch (err) {
+      document.getElementById('hint').innerText = "Erreur adresse. Réessaie.";
+    }
+  });
+</script>
+</body>
+</html>
