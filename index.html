@@ -6,8 +6,11 @@
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <style>
     html, body, #map { height: 100%; margin: 0; }
-    #bar { position:absolute; bottom:10px; left:10px; right:10px;
-      background:#111; color:#fff; padding:10px; border-radius:10px; font-family:Arial; }
+    #bar {
+      position:absolute; bottom:10px; left:10px; right:10px;
+      background:#111; color:#fff; padding:10px; border-radius:10px;
+      font-family:Arial; font-size:14px;
+    }
     button { padding:8px 10px; border-radius:8px; border:0; cursor:pointer; margin-right:8px; }
   </style>
 </head>
@@ -20,16 +23,19 @@
     <button onclick="copy()">Copy Lat,Lng</button>
   </div>
 </div>
+
 <script>
   const map = L.map('map').setView([36.8065, 10.1815], 13);
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
-  let marker = L.marker([36.8065, 10.1815], { draggable: true }).addTo(map);
 
+  let marker = L.marker([36.8065, 10.1815], { draggable: true }).addTo(map);
   let last = {lat: 36.8065, lng: 10.1815};
+
   function show(lat,lng){
     last = {lat,lng};
     document.getElementById('coords').innerText = `lat=${lat.toFixed(6)}, lng=${lng.toFixed(6)}`;
   }
+
   function copy(){
     navigator.clipboard.writeText(`${last.lat},${last.lng}`);
     alert("Copied!");
@@ -40,15 +46,17 @@
     navigator.geolocation.getCurrentPosition(
       (pos)=>{
         const lat = pos.coords.latitude, lng = pos.coords.longitude;
-        marker.setLatLng([lat,lng]); map.setView([lat,lng], 16);
+        marker.setLatLng([lat,lng]);
+        map.setView([lat,lng], 16);
         show(lat,lng);
       },
-      (err)=> alert("Permission refused or unavailable: " + err.message),
+      (err)=> alert("Permission refused/unavailable: " + err.message),
       { enableHighAccuracy: true, timeout: 10000 }
     );
   }
 
   show(last.lat,last.lng);
+
   map.on('click', (e)=>{ marker.setLatLng(e.latlng); show(e.latlng.lat, e.latlng.lng); });
   marker.on('dragend', ()=>{ const p=marker.getLatLng(); show(p.lat,p.lng); });
 </script>
