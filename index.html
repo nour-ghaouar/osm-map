@@ -36,10 +36,33 @@
     document.getElementById('coords').innerText = `lat=${lat.toFixed(6)}, lng=${lng.toFixed(6)}`;
   }
 
-  function copy(){
-    navigator.clipboard.writeText(`${last.lat},${last.lng}`);
-    alert("Copied!");
+function copy(){
+  const text = `${last.lat},${last.lng}`;
+
+  // 1) Try modern clipboard
+  if (navigator.clipboard && window.isSecureContext) {
+    navigator.clipboard.writeText(text)
+      .then(() => alert("Copied!"))
+      .catch(() => fallbackCopy(text));
+  } else {
+    fallbackCopy(text);
   }
+}
+
+function fallbackCopy(text) {
+  const ta = document.createElement("textarea");
+  ta.value = text;
+  document.body.appendChild(ta);
+  ta.select();
+  ta.setSelectionRange(0, 99999);
+  try {
+    document.execCommand("copy");
+    alert("Copied!");
+  } catch (e) {
+    alert("Copy failed. Please select and copy manually:\n" + text);
+  }
+  document.body.removeChild(ta);
+}
 
   function useMyLocation(){
     if (!navigator.geolocation) { alert("Geolocation not supported"); return; }
